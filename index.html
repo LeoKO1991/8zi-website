@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>8zi 八字排盘系统</title>
+</head>
+<body>
+
+<h2>专业八字排盘</h2>
+
+<label>出生日期时间：</label>
+<input type="datetime-local" id="birthday">
+<button onclick="calc()">计算八字</button>
+
+<h3 id="result"></h3>
+
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+
+<script>
+function calc() {
+    let val = document.getElementById("birthday").value;
+    if(!val){
+        alert("请输入出生时间");
+        return;
+    }
+    let date = new Date(val);
+    let solar = Solar.fromDate(date);
+    let lunar = solar.getLunar();
+    let baZi = lunar.getEightChar();
+
+    document.getElementById("result").innerHTML =
+        "年柱：" + baZi.getYear() + "<br>" +
+        "月柱：" + baZi.getMonth() + "<br>" +
+        "日柱：" + baZi.getDay() + "<br>" +
+        "时柱：" + baZi.getTime();
+}
+</script>
+
+</body>
+</html>
