@@ -91,19 +91,18 @@
             margin-bottom: 20px;
         }
 
-        /* 五行输入行 */
+        /* 五行输入行 — 强制不换行 */
         .input-row-five {
             display: flex;
             gap: 8px;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap; /* 禁止换行 */
         }
 
         .input-item {
-            flex: 1;
-            min-width: 60px;
+            flex: 1 1 0;        /* 等分宽度 */
+            min-width: 0;        /* 防止内容溢出 */
             text-align: center;
         }
 
@@ -113,23 +112,37 @@
             color: #666;
             margin-bottom: 4px;
             font-weight: 500;
+            white-space: nowrap;  /* 标签不换行 */
         }
 
         .input-item input {
             width: 100%;
-            padding: 10px 5px;
+            padding: 10px 2px;    /* 减小左右内边距，防止溢出 */
             border: 1px solid #ddd;
             border-radius: 30px;
             text-align: center;
             font-size: 16px;
             background: white;
-            /* 确保数字输入框右侧的微调按钮在移动端不会太小 */
         }
 
         .input-item input:focus {
             border-color: #888;
             outline: none;
             box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        /* 小屏幕时缩小字体和内边距，保证一行 */
+        @media (max-width: 500px) {
+            .input-item label {
+                font-size: 12px;
+            }
+            .input-item input {
+                font-size: 14px;
+                padding: 8px 0;
+            }
+            .input-row-five {
+                gap: 4px;
+            }
         }
 
         /* 闰月复选框 */
@@ -147,7 +160,7 @@
             height: 18px;
         }
 
-        /* 按钮行：只剩一键排盘 */
+        /* 按钮行 */
         .button-row {
             display: flex;
             justify-content: center;
@@ -175,6 +188,14 @@
         .btn-query:hover {
             background: #333;
             transform: scale(1.02);
+        }
+
+        /* 操作提示 */
+        .hint {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin-top: 10px;
         }
 
         /* 八字结果卡片 */
@@ -335,10 +356,11 @@
         </div>
     </div>
 
-    <!-- 按钮行：一键排盘 -->
+    <!-- 按钮行：一键排盘 + 提示 -->
     <div class="button-row">
         <button class="btn-query" onclick="calculateBazi()">🔮 一键排盘</button>
     </div>
+    <div class="hint">⏱️ 可使用鼠标滚轮或上下箭头调整数值</div>
 
     <!-- 结果显示区 -->
     <div id="result" class="result-card" style="display: none;">
@@ -382,7 +404,8 @@
     };
 
     const allWuXing = ['木', '火', '土', '金', '水'];
-    const wuxingIcons = { '木': '🌳', '火': '🔥', '土': '⛰️', '金': '🪙', '水': '💧' };
+    // 金图标改为钱袋，象征金条
+    const wuxingIcons = { '木': '🌳', '火': '🔥', '土': '⛰️', '金': '💰', '水': '💧' };
     const wxToClass = { '木': 'mu', '火': 'huo', '土': 'tu', '金': 'jin', '水': 'shui' };
 
     function getColorClassForGan(gan) {
