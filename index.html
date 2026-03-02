@@ -1,39 +1,540 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>8zi 八字排盘系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8zi 专业八字排盘 · 五行全缺</title>
+    <!-- 农历计算库 -->
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px 25px;
+            border-radius: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+            transition: all 0.3s;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        /* 选项卡 */
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 0;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: #1e1e1e;
+            color: white;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        /* 输入面板 */
+        .input-panel {
+            background: #fafafa;
+            border-radius: 28px;
+            padding: 25px 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 五行输入行 */
+        .input-row-five {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .input-item {
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .input-item label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .input-item input {
+            width: 100%;
+            padding: 10px 5px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            text-align: center;
+            font-size: 16px;
+            background: white;
+            /* 确保数字输入框右侧的微调按钮在移动端不会太小 */
+        }
+
+        .input-item input:focus {
+            border-color: #888;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        /* 闰月复选框 */
+        .leap-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .leap-checkbox input {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 按钮行：只剩一键排盘 */
+        .button-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .btn-query {
+            flex: 1;
+            padding: 14px 0;
+            border: none;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            background: #1e1e1e;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-query:hover {
+            background: #333;
+            transform: scale(1.02);
+        }
+
+        /* 八字结果卡片 */
+        .result-card {
+            background: #fafafa;
+            border-radius: 28px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .bazi-grid {
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            margin: 20px 0 25px;
+        }
+
+        .bazi-col {
+            flex: 1;
+        }
+
+        .bazi-char {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        /* 五行颜色类 (增强版) */
+        .wuxing-mu { color: #2e7d32; }      /* 木 - 深绿 */
+        .wuxing-huo { color: #e53935; }     /* 火 - 火红 */
+        .wuxing-tu { color: #a1887f; }      /* 土 - 浅褐 */
+        .wuxing-jin { color: #ffb300; }     /* 金 - 亮黄 */
+        .wuxing-shui { color: #1565c0; }    /* 水 - 蓝 */
+
+        .wuxing-tag {
+            font-size: 16px;
+            background: #eaeaea;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 40px;
+            margin-top: 8px;
+            color: #2e2e2e;
+            font-weight: 500;
+        }
+
+        .wuxing-summary {
+            background: #e9e9e9;
+            border-radius: 48px;
+            padding: 18px 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        .wuxing-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            margin: 15px 0 8px;
+            font-size: 20px;
+        }
+
+        .wuxing-item {
+            width: 58px;
+            height: 58px;
+            border-radius: 58px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            line-height: 1.2;
+        }
+
+        .wuxing-item.missing {
+            background: #d9d9d9;
+            text-decoration: line-through 2px #b00;
+        }
+
+        .footnote {
+            font-size: 13px;
+            color: #777;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-<h2>专业八字排盘</h2>
+<div class="container">
+    <h1>✨ 专业八字排盘</h1>
+    <div class="subtitle">五行全缺一目了然</div>
 
-<label>出生日期时间：</label>
-<input type="datetime-local" id="birthday">
-<button onclick="calc()">计算八字</button>
+    <!-- 选项卡 -->
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tabGregorian" onclick="switchPanel('gregorian')"><span>🌞</span> 公历</button>
+        <button class="tab-btn" id="tabLunar" onclick="switchPanel('lunar')"><span>🌙</span> 农历</button>
+    </div>
 
-<h3 id="result"></h3>
+    <!-- 公历输入面板 -->
+    <div id="panelGregorian" class="input-panel" style="display: block;">
+        <div class="input-row-five">
+            <div class="input-item">
+                <label>年</label>
+                <input type="number" id="gregorianYear" value="2000" min="1900" max="2100" step="1">
+            </div>
+            <div class="input-item">
+                <label>月</label>
+                <input type="number" id="gregorianMonth" value="1" min="1" max="12" step="1">
+            </div>
+            <div class="input-item">
+                <label>日</label>
+                <input type="number" id="gregorianDay" value="1" min="1" max="31" step="1">
+            </div>
+            <div class="input-item">
+                <label>时</label>
+                <input type="number" id="gregorianHour" value="12" min="0" max="23" step="1">
+            </div>
+            <div class="input-item">
+                <label>分</label>
+                <input type="number" id="gregorianMinute" value="0" min="0" max="59" step="1">
+            </div>
+        </div>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+    <!-- 农历输入面板 -->
+    <div id="panelLunar" class="input-panel" style="display: none;">
+        <div class="input-row-five">
+            <div class="input-item">
+                <label>年</label>
+                <input type="number" id="lunarYear" value="2000" min="1900" max="2100" step="1">
+            </div>
+            <div class="input-item">
+                <label>月</label>
+                <input type="number" id="lunarMonth" value="1" min="1" max="12" step="1">
+            </div>
+            <div class="input-item">
+                <label>日</label>
+                <input type="number" id="lunarDay" value="1" min="1" max="30" step="1">
+            </div>
+            <div class="input-item">
+                <label>时</label>
+                <input type="number" id="lunarHour" value="12" min="0" max="23" step="1">
+            </div>
+            <div class="input-item">
+                <label>分</label>
+                <input type="number" id="lunarMinute" value="0" min="0" max="59" step="1">
+            </div>
+        </div>
+        <div class="leap-checkbox">
+            <input type="checkbox" id="lunarLeap">
+            <label for="lunarLeap">🌘 本月是闰月</label>
+        </div>
+    </div>
+
+    <!-- 按钮行：一键排盘 -->
+    <div class="button-row">
+        <button class="btn-query" onclick="calculateBazi()">🔮 一键排盘</button>
+    </div>
+
+    <!-- 结果显示区 -->
+    <div id="result" class="result-card" style="display: none;">
+        <!-- 动态填充内容 -->
+    </div>
+</div>
 
 <script>
-function calc() {
-    let val = document.getElementById("birthday").value;
-    if(!val){
-        alert("请输入出生时间");
-        return;
-    }
-    let date = new Date(val);
-    let solar = Solar.fromDate(date);
-    let lunar = solar.getLunar();
-    let baZi = lunar.getEightChar();
+    // --- 选项卡切换 ---
+    function switchPanel(type) {
+        const panelG = document.getElementById('panelGregorian');
+        const panelL = document.getElementById('panelLunar');
+        const tabG = document.getElementById('tabGregorian');
+        const tabL = document.getElementById('tabLunar');
 
-    document.getElementById("result").innerHTML =
-        "年柱：" + baZi.getYear() + "<br>" +
-        "月柱：" + baZi.getMonth() + "<br>" +
-        "日柱：" + baZi.getDay() + "<br>" +
-        "时柱：" + baZi.getTime();
-}
+        if (type === 'gregorian') {
+            panelG.style.display = 'block';
+            panelL.style.display = 'none';
+            tabG.classList.add('active');
+            tabL.classList.remove('active');
+        } else {
+            panelG.style.display = 'none';
+            panelL.style.display = 'block';
+            tabG.classList.remove('active');
+            tabL.classList.add('active');
+        }
+    }
+
+    // --- 天干地支五行映射 ---
+    const tianganWuXing = {
+        '甲': '木', '乙': '木',
+        '丙': '火', '丁': '火',
+        '戊': '土', '己': '土',
+        '庚': '金', '辛': '金',
+        '壬': '水', '癸': '水'
+    };
+    const dizhiWuXing = {
+        '子': '水', '丑': '土', '寅': '木', '卯': '木',
+        '辰': '土', '巳': '火', '午': '火', '未': '土',
+        '申': '金', '酉': '金', '戌': '土', '亥': '水'
+    };
+
+    const allWuXing = ['木', '火', '土', '金', '水'];
+    const wuxingIcons = { '木': '🌳', '火': '🔥', '土': '⛰️', '金': '🪙', '水': '💧' };
+    const wxToClass = { '木': 'mu', '火': 'huo', '土': 'tu', '金': 'jin', '水': 'shui' };
+
+    function getColorClassForGan(gan) {
+        return `wuxing-${wxToClass[tianganWuXing[gan]]}`;
+    }
+    function getColorClassForZhi(zhi) {
+        return `wuxing-${wxToClass[dizhiWuXing[zhi]]}`;
+    }
+
+    // --- 核心计算函数 ---
+    function calculateBazi() {
+        const resultDiv = document.getElementById('result');
+        const isGregorian = document.getElementById('panelGregorian').style.display !== 'none';
+
+        let solar;
+        try {
+            if (isGregorian) {
+                const year = parseInt(document.getElementById('gregorianYear').value, 10);
+                const month = parseInt(document.getElementById('gregorianMonth').value, 10);
+                const day = parseInt(document.getElementById('gregorianDay').value, 10);
+                const hour = parseInt(document.getElementById('gregorianHour').value, 10);
+                const minute = parseInt(document.getElementById('gregorianMinute').value, 10);
+
+                if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+                    alert('请完整填写公历年、月、日、时、分');
+                    return;
+                }
+                solar = Solar.fromYmdHms(year, month, day, hour, minute, 0);
+            } else {
+                const year = parseInt(document.getElementById('lunarYear').value, 10);
+                const month = parseInt(document.getElementById('lunarMonth').value, 10);
+                const day = parseInt(document.getElementById('lunarDay').value, 10);
+                const hour = parseInt(document.getElementById('lunarHour').value, 10);
+                const minute = parseInt(document.getElementById('lunarMinute').value, 10);
+                const isLeap = document.getElementById('lunarLeap').checked;
+
+                if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+                    alert('请完整填写农历年、月、日、时、分');
+                    return;
+                }
+
+                const lunar = Lunar.fromYmdHms(year, month, day, hour, minute, 0, isLeap);
+                solar = lunar.getSolar();
+            }
+        } catch (e) {
+            alert('输入数据有误：' + e.message);
+            console.error(e);
+            return;
+        }
+
+        // 获取八字
+        const lunarFromSolar = solar.getLunar();
+        const baZi = lunarFromSolar.getEightChar();
+
+        const yearGan = baZi.getYear().charAt(0);
+        const yearZhi = baZi.getYear().charAt(1);
+        const monthGan = baZi.getMonth().charAt(0);
+        const monthZhi = baZi.getMonth().charAt(1);
+        const dayGan = baZi.getDay().charAt(0);
+        const dayZhi = baZi.getDay().charAt(1);
+        const timeGan = baZi.getTime().charAt(0);
+        const timeZhi = baZi.getTime().charAt(1);
+
+        // 五行统计
+        const wuXingCount = { '木': 0, '火': 0, '土': 0, '金': 0, '水': 0 };
+        function addWuXing(gan, zhi) {
+            if (tianganWuXing[gan]) wuXingCount[tianganWuXing[gan]]++;
+            if (dizhiWuXing[zhi]) wuXingCount[dizhiWuXing[zhi]]++;
+        }
+        addWuXing(yearGan, yearZhi);
+        addWuXing(monthGan, monthZhi);
+        addWuXing(dayGan, dayZhi);
+        addWuXing(timeGan, timeZhi);
+
+        const missing = allWuXing.filter(wx => wuXingCount[wx] === 0);
+        const hasAll = missing.length === 0;
+
+        // 缺失提示（带颜色）
+        let missingHtml = '';
+        if (hasAll) {
+            missingHtml = '🎉 恭喜！您的八字五行俱全，能量平衡。';
+        } else {
+            const missingSpans = missing.map(wx => {
+                return `<span class="wuxing-${wxToClass[wx]}" style="font-weight:600;">${wx}</span>`;
+            }).join('、');
+            missingHtml = `⚠️ 您的八字缺少：${missingSpans}，共 ${missing.length} 种。`;
+        }
+
+        // 五行分布图标
+        const wuxingListHtml = allWuXing.map(wx => {
+            const count = wuXingCount[wx];
+            const cls = count === 0 ? 'wuxing-item missing' : 'wuxing-item';
+            const icon = wuxingIcons[wx];
+            const numClass = wxToClass[wx];
+            return `<div class="${cls}">${icon}<span class="wuxing-${numClass}">${count}</span></div>`;
+        }).join('');
+
+        // 八字命盘
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <div style="text-align:center; font-size:20px; font-weight:600; margin-bottom:20px;">📜 八字命盘</div>
+            <div class="bazi-grid">
+                <div class="bazi-col">
+                    <div class="bazi-char">
+                        <span class="${getColorClassForGan(yearGan)}">${yearGan}</span><span class="${getColorClassForZhi(yearZhi)}">${yearZhi}</span>
+                    </div>
+                    <div class="wuxing-tag">${tianganWuXing[yearGan]}${dizhiWuXing[yearZhi]}</div>
+                    <div style="font-size:14px; color:#666;">年柱</div>
+                </div>
+                <div class="bazi-col">
+                    <div class="bazi-char">
+                        <span class="${getColorClassForGan(monthGan)}">${monthGan}</span><span class="${getColorClassForZhi(monthZhi)}">${monthZhi}</span>
+                    </div>
+                    <div class="wuxing-tag">${tianganWuXing[monthGan]}${dizhiWuXing[monthZhi]}</div>
+                    <div style="font-size:14px; color:#666;">月柱</div>
+                </div>
+                <div class="bazi-col">
+                    <div class="bazi-char">
+                        <span class="${getColorClassForGan(dayGan)}">${dayGan}</span><span class="${getColorClassForZhi(dayZhi)}">${dayZhi}</span>
+                    </div>
+                    <div class="wuxing-tag">${tianganWuXing[dayGan]}${dizhiWuXing[dayZhi]}</div>
+                    <div style="font-size:14px; color:#666;">日柱</div>
+                </div>
+                <div class="bazi-col">
+                    <div class="bazi-char">
+                        <span class="${getColorClassForGan(timeGan)}">${timeGan}</span><span class="${getColorClassForZhi(timeZhi)}">${timeZhi}</span>
+                    </div>
+                    <div class="wuxing-tag">${tianganWuXing[timeGan]}${dizhiWuXing[timeZhi]}</div>
+                    <div style="font-size:14px; color:#666;">时柱</div>
+                </div>
+            </div>
+
+            <div class="wuxing-summary">
+                <div style="font-weight:600; margin-bottom:8px;">⚖️ 五行分布 (出现次数)</div>
+                <div class="wuxing-list">
+                    ${wuxingListHtml}
+                </div>
+                <div style="margin-top:15px; font-size:17px;">${missingHtml}</div>
+            </div>
+            <div class="footnote">※ 五行基于天干+地支本气，仅供参考</div>
+        `;
+    }
+
+    // 初始化默认值：公历设为当前日期时间
+    window.onload = function() {
+        const now = new Date();
+        document.getElementById('gregorianYear').value = now.getFullYear();
+        document.getElementById('gregorianMonth').value = now.getMonth() + 1;
+        document.getElementById('gregorianDay').value = now.getDate();
+        document.getElementById('gregorianHour').value = now.getHours();
+        document.getElementById('gregorianMinute').value = now.getMinutes();
+    };
 </script>
 
 </body>
