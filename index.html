@@ -97,12 +97,12 @@
             gap: 8px;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: nowrap; /* 禁止换行 */
+            flex-wrap: nowrap;
         }
 
         .input-item {
-            flex: 1 1 0;        /* 等分宽度 */
-            min-width: 0;        /* 防止内容溢出 */
+            flex: 1 1 0;
+            min-width: 0;
             text-align: center;
         }
 
@@ -112,12 +112,12 @@
             color: #666;
             margin-bottom: 4px;
             font-weight: 500;
-            white-space: nowrap;  /* 标签不换行 */
+            white-space: nowrap;
         }
 
         .input-item input {
             width: 100%;
-            padding: 10px 2px;    /* 减小左右内边距，防止溢出 */
+            padding: 10px 2px;
             border: 1px solid #ddd;
             border-radius: 30px;
             text-align: center;
@@ -188,14 +188,6 @@
         .btn-query:hover {
             background: #333;
             transform: scale(1.02);
-        }
-
-        /* 操作提示 */
-        .hint {
-            text-align: center;
-            font-size: 13px;
-            color: #888;
-            margin-top: 10px;
         }
 
         /* 八字结果卡片 */
@@ -356,11 +348,10 @@
         </div>
     </div>
 
-    <!-- 按钮行：一键排盘 + 提示 -->
+    <!-- 按钮行：一键排盘 (无提示) -->
     <div class="button-row">
         <button class="btn-query" onclick="calculateBazi()">🔮 一键排盘</button>
     </div>
-    <div class="hint">⏱️ 可使用鼠标滚轮或上下箭头调整数值</div>
 
     <!-- 结果显示区 -->
     <div id="result" class="result-card" style="display: none;">
@@ -404,8 +395,7 @@
     };
 
     const allWuXing = ['木', '火', '土', '金', '水'];
-    // 金图标改为钱袋，象征金条
-    const wuxingIcons = { '木': '🌳', '火': '🔥', '土': '⛰️', '金': '💰', '水': '💧' };
+    // 五行 → CSS类名映射
     const wxToClass = { '木': 'mu', '火': 'huo', '土': 'tu', '金': 'jin', '水': 'shui' };
 
     function getColorClassForGan(gan) {
@@ -494,13 +484,12 @@
             missingHtml = `⚠️ 您的八字缺少：${missingSpans}，共 ${missing.length} 种。`;
         }
 
-        // 五行分布图标
+        // 五行分布列表：每个格子显示五行文字（上）和计数（下），均带颜色
         const wuxingListHtml = allWuXing.map(wx => {
             const count = wuXingCount[wx];
             const cls = count === 0 ? 'wuxing-item missing' : 'wuxing-item';
-            const icon = wuxingIcons[wx];
             const numClass = wxToClass[wx];
-            return `<div class="${cls}">${icon}<span class="wuxing-${numClass}">${count}</span></div>`;
+            return `<div class="${cls}"><span class="wuxing-${numClass}" style="font-size:20px;">${wx}</span><span class="wuxing-${numClass}" style="font-size:18px;">${count}</span></div>`;
         }).join('');
 
         // 八字命盘
@@ -539,7 +528,7 @@
             </div>
 
             <div class="wuxing-summary">
-                <div style="font-weight:600; margin-bottom:8px;">⚖️ 五行分布 (出现次数)</div>
+                <div style="font-weight:600; margin-bottom:8px;">⚖️ 五行分布</div>
                 <div class="wuxing-list">
                     ${wuxingListHtml}
                 </div>
